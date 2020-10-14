@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: xrayd
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: xrayd
+  template:
+    metadata:
+      labels:
+        app: xrayd
+    spec:
+      containers:
+        - name: xrayd
+          image: amazon/aws-xray-daemon
+          args: ["-o"] # local mode to avoid reading ec2 instance metadata
+          env:
+            - name: AWS_REGION
+              value: eu-central-1
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws
+                  key: AWS_SECRET_ACCESS_KEY
+          resources:
+            requests:
+              cpu: 256m
+              memory: 32Mi
+            limits:
+              cpu: 512m
+              memory: 64Mi
+          ports:
+            - name: xray-ingest
+              containerPort: 2000
+              hostPort: 2000
+              protocol: UDP
+            - name: xray-tcp
+              containerPort: 2000
+              hostPort: 2000
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xrayd
+  namespace: default
+spec:
+  selector:
+    app: xrayd
+  clusterIP: None
+  ports:
+    - name: xray-ingest
+      port: 2000
+      protocol: UDP
+    - name: xray-tcp
+      port: 2000
+      protocol: TCP
