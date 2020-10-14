@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: xray-k8s-app
+  labels:
+    app: xray-k8s-app
+spec:
+  type: NodePort
+  ports:
+  - port: 8989
+  selector:
+    app: xray-k8s-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xray-k8s-app
+  labels:
+    app: xray-k8s-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xray-k8s-app
+  template:
+    metadata:
+      labels:
+        app: xray-k8s-app
+    spec:
+      containers:
+      - name: xray-k8s-app
+        image: cf/xray-k8s-app
+        imagePullPolicy: Never
+        env:
+          - name: AWS_XRAY_DAEMON_ADDRESS
+            value: "xrayd.default:2000"
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: AWS_SECRET_ACCESS_KEY
+        ports:
+        - containerPort: 8989
