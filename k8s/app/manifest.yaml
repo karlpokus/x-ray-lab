@@ -44,5 +44,10 @@ spec:
               secretKeyRef:
                 name: aws
                 key: AWS_SECRET_ACCESS_KEY
+          - name: AWS_LAMBDA_URL
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: AWS_LAMBDA_URL
         ports:
         - containerPort: 8989
