@@ -1,0 +1,31 @@
+service: xray-lambda-app
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: go1.x
+  tracing:
+    lambda: true
+    apiGateway: true
+  region: eu-central-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+functions:
+  hello:
+    handler: bin/hello
+    events:
+      - http:
+          path: hello
+          method: get
